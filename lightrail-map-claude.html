@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sound Transit Line 2 Real-Time Map</title>
+    <style>
+        #map {
+            height: 800px;
+            width: 100%;
+        }
+        #status {
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #f8f8f8;
+            border-radius: 5px;
+        }
+        #debug {
+            padding: 10px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            margin-top: 10px;
+            font-family: monospace;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sound Transit Line 2 & Route 100479 Real-Time Map</h1>
+    <div id="status">Loading map...</div>
+    <div id="map"></div>
+    <div id="debug"></div>
+    
+    <script>
+        // Track markers for cleanup
+        let vehicleMarkers = [];
+        let apiKey = "880e54e0-83fc-4c11-bbde-eb74613284d0"; // OneBusAway API key
+        
+        // Store previous positions for direction determination - moved to global scope
+        let routeLatitudes = {};
+        let previousVehicles = [];
+        
+        // Debug logging function
+        function log(message) {
+            const debug = document.getElementById('debug');
+            const timestamp = new Date().toLocaleTimeString();
+            debug.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            debug.scrollTop = debug.scrollHeight;
+            console.log(message);
+        }
+
+        // Update status message
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = type;
+        }
+
+        // Get URL parameter helper
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            var results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        // Initialize function
+        function initialize() {
+            // API key is already hardcoded
+            return true;
+        }
+        
+        // Function to determine direction of a vehicle
+        function determineDirection(vehicle, lastLatitude) {
+            // First try to determine from trip_id if possible
+            if (vehicle.trip_id) {
+                if (vehicle.trip_id.includes("NB") || 
+                    vehicle.trip_id.includes("NORTH")) {
+                    return {
+                        icon: "train_icon.png", 
+                        direction: "northbound",
+                        reason: "trip_id contains NB/NORTH"
+                    };
+                }
+                if (vehicle.trip_id.includes("SB") || 
+                    vehicle.trip_id.includes("SOUTH")) {
+                    return {
+                        icon: "train_icon_red.png", 
+                        direction: "southbound",
+                        reason: "trip_id contains SB/SOUTH"
+                    };
+                }
+                
+                // Try to extract numeric part of the trip ID
+                const numericMatch = vehicle.trip_id.match(/\d+/);
+                if (numericMatch) {
+                    const tripNumber = parseInt(numericMatch[0], 10);
+                    // Common pattern: odd/even trip numbers indicate direction
+                    if (tripNumber % 2 === 0) {
+                        return {
+                            icon: "train_icon.png", 
+                            direction: "northbound",
+                            reason: "even trip_id number"
+                        };
+                    } else {
+                        return {
+                            icon: "train_icon_red.png", 
+                            direction: "southbound",
+                            reason: "odd trip_id number"
+                        };
+                    }
+                }
+            }
+            
+            // Then use position history if available
+            if (lastLatitude) {
+                const delta = vehicle.latitude - lastLatitude;
+                // Use small threshold to avoid jitter from GPS inaccuracy
+                if (delta > 0.0001) {
+                    return {
+                        icon: "train_icon.png", 
+                        direction: "northbound",
+                        reason: `moving north (delta: ${delta.toFixed(6)})`
+                    };
+                } else if (delta < -0.0001) {
+                    return {
+                        icon: "train_icon_red.png", 
+                        direction: "southbound",
+                        reason: `moving south (delta: ${delta.toFixed(6)})`
+                    };
+                }
+            }
+            
+            // If we can't determine, use the midpoint of the route
+            // Approximate midpoint for route 100479
+            if (vehicle.latitude < 47.65) {
+                return {
+                    icon: "train_icon.png", 
+                    direction: "northbound",
+                    reason: "in southern half of route"
+                };
+            } else {
+                return {
+                    icon: "train_icon_red.png", 
+                    direction: "southbound",
+                    reason: "in northern half of route"
+                };
+            }
+        }
+        
+        // Function to determine train direction for Line 2
+        function determineTrainDirection(vehicle) {
+            // Line 2 runs East-West between South Bellevue (west end) and Redmond (east end)
+            
+            // First, try to determine from trip_id if available
+            if (vehicle.trip_id) {
+                // Sound Transit trip IDs may contain direction information
+                if (vehicle.trip_id.includes("EB") || 
+                    vehicle.trip_id.includes("EAST") || 
+                    vehicle.trip_id.toLowerCase().includes("redmond")) {
+                    return {
+                        icon: "train_icon.png", 
+                        direction: "eastbound",
+                        reason: "trip_id indicates eastbound"
+                    };
+                }
+                if (vehicle.trip_id.includes("WB") || 
+                    vehicle.trip_id.includes("WEST") || 
+                    vehicle.trip_id.toLowerCase().includes("bellevue")) {
+                    return {
+                        icon: "train_icon_red.png", 
+                        direction: "westbound",
+                        reason: "trip_id indicates westbound"
+                    };
+                }
+                
+                // Try to extract numeric part of the trip ID
+                const numericMatch = vehicle.trip_id.match(/\d+/);
+                if (numericMatch) {
+                    const tripNumber = parseInt(numericMatch[0], 10);
+                    // Common pattern in transit systems: odd/even trip numbers indicate direction
+                    if (tripNumber % 2 === 0) {
+                        return {
+                            icon: "train_icon.png", 
+                            direction: "eastbound",
+                            reason: "even trip_id number"
+                        };
+                    } else {
+                        return {
+                            icon: "train_icon_red.png", 
+                            direction: "westbound",
+                            reason: "odd trip_id number"
+                        };
+                    }
+                }
+            }
+            
+            // Fallback to position-based direction determination
+            // Use longitude to determine direction (Line 2 runs primarily east-west)
+            // The approximate midpoint of Line 2 is around -122.155 longitude
+            if (vehicle.longitude) {
+                if (vehicle.longitude < -122.155) {
+                    // Western half of the line, train likely heading east
+                    return {
+                        icon: "train_icon.png", 
+                        direction: "eastbound",
+                        reason: "in western half of line"
+                    };
+                } else {
+                    // Eastern half of the line, train likely heading west
+                    return {
+                        icon: "train_icon_red.png", 
+                        direction: "westbound",
+                        reason: "in eastern half of line"
+                    };
+                }
+            }
+            
+            // If we can't determine, use default
+            return {
+                icon: "https://maps.google.com/mapfiles/kml/shapes/subway.png", 
+                direction: "unknown",
+                reason: "could not determine"
+            };
+        }
+
+        // Function to parse GTFS-Realtime protobuf data
+        async function fetchGTFSRealtimeData() {
+            if (!apiKey) return [];
+            
+            // Use the OneBusAway GTFS-realtime API for Sound Transit (agency ID 40)
+            const apiUrl = `https://api.pugetsound.onebusaway.org/api/gtfs_realtime/vehicle-positions-for-agency/40.pbtext?key=${apiKey}`;
+            
+            try {
+                updateStatus("Fetching real-time vehicle positions...");
+                log("Requesting data from: " + apiUrl);
+                
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error(`API returned status ${response.status}`);
+                }
+                
+                // Parse the response text - it's in protocol buffer text format
+                const pbText = await response.text();
+                
+                // A basic parser for protocol buffer text format
+                const vehicles = [];
+                const entityRegex = /entity\s*{\s*id:\s*"[^"]*"\s*vehicle\s*{\s*trip\s*{\s*trip_id:\s*"[^"]*"\s*route_id:\s*"[^"]*"\s*}\s*position\s*{\s*latitude:\s*[\d.-]+\s*longitude:\s*[\d.-]+\s*}\s*timestamp:\s*\d+\s*vehicle\s*{\s*id:\s*"[^"]*"\s*}\s*}\s*}/g;
+                const tripIdRegex = /trip_id:\s*"([^"]*)"/;
+                const routeIdRegex = /route_id:\s*"([^"]*)"/;
+                const latRegex = /latitude:\s*([\d.-]+)/;
+                const lonRegex = /longitude:\s*([\d.-]+)/;
+                const vehicleIdRegex = /id:\s*"([^"]*)"/;
+                
+                let match;
+                while ((match = entityRegex.exec(pbText)) !== null) {
+                    const entityText = match[0]; // Use the entire matched block
+                    
+                    // Extract route_id
+                    const routeIdMatch = routeIdRegex.exec(entityText);
+                    if (!routeIdMatch) continue;
+                    const routeId = routeIdMatch[1];
+                    
+                    // Keep Line 2 vehicles and route 100479
+                    if (!routeId.includes("2LINE") && routeId !== "100479") continue;
+                    
+                    const tripIdMatch = tripIdRegex.exec(entityText);
+                    const latMatch = latRegex.exec(entityText);
+                    const lonMatch = lonRegex.exec(entityText);
+                    const vehicleIdMatch = vehicleIdRegex.exec(entityText);
+                    
+                    if (latMatch && lonMatch) {
+                        const vehicle = {
+                            route_id: routeId,
+                            trip_id: tripIdMatch ? tripIdMatch[1] : "unknown",
+                            vehicle_id: vehicleIdMatch ? vehicleIdMatch[1] : "unknown",
+                            latitude: parseFloat(latMatch[1]),
+                            longitude: parseFloat(lonMatch[1])
+                        };
+                        
+                        // Get the last known position of this vehicle
+                        const lastLatitude = routeLatitudes[vehicle.vehicle_id];
+                        
+                        // Determine direction and icon based on route type
+                        let directionInfo;
+                        
+                        if (routeId.includes("2LINE")) {
+                            directionInfo = determineTrainDirection(vehicle);
+                        } else if (routeId === "100479") {
+                            directionInfo = determineDirection(vehicle, lastLatitude);
+                        } else {
+                            directionInfo = { 
+                                icon: "https://maps.google.com/mapfiles/kml/shapes/subway.png",
+                                direction: "unknown",
+                                reason: "unknown route" 
+                            };
+                        }
+                        
+                        // Add direction info to vehicle
+                        vehicle.icon = directionInfo.icon;
+                        vehicle.direction = directionInfo.direction;
+                        vehicle.directionReason = directionInfo.reason;
+                        
+                        // Update the stored latitude for this vehicle
+                        routeLatitudes[vehicle.vehicle_id] = vehicle.latitude;
+                        
+                        // Log detailed info about this vehicle
+                        log(`Vehicle ID: ${vehicle.vehicle_id}, Route: ${routeId}, Direction: ${vehicle.direction} (${vehicle.directionReason}), Lat: ${vehicle.latitude}, Lon: ${vehicle.longitude}`);
+                        
+                        vehicles.push(vehicle);
+                    }
+                }
+                
+                // Store the current vehicles for the next comparison
+                previousVehicles = [...vehicles];
+                
+                log(`Found ${vehicles.length} vehicles (Line 2 and Route 100479)`);
+                
+                if (vehicles.length === 0) {
+                    updateStatus("No vehicles currently active or detected", "warning");
+                } else {
+                    const line2Count = vehicles.filter(v => v.route_id.includes("2LINE")).length;
+                    const route100479Count = vehicles.filter(v => v.route_id === "100479").length;
+                    updateStatus(`Found ${line2Count} Line 2 trains and ${route100479Count} Route 100479 vehicles`, "success");
+                }
+                
+                return vehicles;
+                
+            } catch (error) {
+                log(`Error fetching real-time data: ${error.message}`);
+                updateStatus(`Error: ${error.message}`, "error");
+                return [];
+            }
+        }
+
+        function initMap() {
+            if (!initialize()) return;
+            
+            // Create a map centered on Bellevue/Redmond area
+            const map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 13,
+                center: { lat: 47.6299, lng: -122.1536 }, // Updated center to new coordinates
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+            });
+
+            // Turn on the transit layer
+            const transitLayer = new google.maps.TransitLayer();
+            transitLayer.setMap(map);
+
+            async function updateRealTimeLocations() {
+                // Clear old vehicle markers first
+                vehicleMarkers.forEach(marker => marker.setMap(null));
+                vehicleMarkers = [];
+                
+                // Fetch new vehicle locations
+                const vehicles = await fetchGTFSRealtimeData();
+                
+                if (vehicles.length === 0) {
+                    log("No vehicles returned after filtering");
+                    return;
+                }
+                
+                vehicles.forEach(vehicle => {
+                    // Create a new marker for this vehicle
+                    const marker = new google.maps.Marker({
+                        position: { lat: vehicle.latitude, lng: vehicle.longitude },
+                        map: map,
+                        icon: { 
+                            url: vehicle.icon, 
+                            scaledSize: new google.maps.Size(32, 32) 
+                        },
+                        title: `${vehicle.route_id.includes("2LINE") ? "Line 2 Train" : "Route 100479"} - ${vehicle.direction}`
+                    });
+                    
+                    // Track this marker for future updates
+                    marker.vehicleId = vehicle.vehicle_id;
+                    vehicleMarkers.push(marker);
+                    
+                    // Create info window with vehicle details
+                    const infoContent = `
+                        <div style="padding: 10px;">
+                            <strong>${vehicle.route_id.includes("2LINE") ? "Line 2 Train" : "Route 100479"}</strong><br>
+                            ID: ${vehicle.vehicle_id}<br>
+                            Direction: ${vehicle.direction}<br>
+                            Trip: ${vehicle.trip_id}<br>
+                            Route: ${vehicle.route_id}
+                        </div>
+                    `;
+                    
+                    const infoWindow = new google.maps.InfoWindow({
+                        content: infoContent
+                    });
+                    
+                    marker.addListener("click", () => {
+                        infoWindow.open(map, marker);
+                    });
+                });
+                
+                log(`Updated map with ${vehicles.length} vehicles`);
+            }
+
+            // Initial update
+            updateRealTimeLocations();
+            
+            // Update every 15 seconds
+            setInterval(updateRealTimeLocations, 15000);
+            
+            // Log successful map initialization
+            log("Map initialized successfully");
+        }
+    </script>
+    
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBjksFdtZud7U1Y0eZn6jvUJfCk7O1tqjY&callback=initMap" async defer></script>
+</body>
+</html>
