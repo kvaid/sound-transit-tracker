@@ -1,30 +1,23 @@
-Sound Transit Routes:
-Route ID: 40_100511, Short Name: 542, Description: Redmond - University District
-Route ID: 40_532, Short Name: 532, Description: 
-Route ID: 40_535, Short Name: 535, Description: 
-Route ID: 40_SNDR_TL, Short Name: S Line, Description: S Line runs between King Street Station and Tacoma Dome or Lakewood Stations weekdays
-Route ID: 40_102734, Short Name: 566, Description: Auburn - Redmond
-Route ID: 40_560, Short Name: 560, Description: 
-Route ID: 40_574, Short Name: 574, Description: 
-Route ID: 40_577, Short Name: 577, Description: 
-Route ID: 40_578, Short Name: 578, Description: 
-Route ID: 40_SNDR_EV, Short Name: N Line, Description: N Line runs between Everett Station and King Street Station weekdays
-Route ID: 40_580, Short Name: 580, Description: 
-Route ID: 40_586, Short Name: 586, Description: 
-Route ID: 40_590, Short Name: 590, Description: 
-Route ID: 40_592, Short Name: 592, Description: 
-Route ID: 40_594, Short Name: 594, Description: 
-Route ID: 40_595, Short Name: 595, Description: 
-Route ID: 40_596, Short Name: 596, Description: 
-Route ID: 40_100232, Short Name: 522, Description: Woodinville - Roosevelt Link Station
-Route ID: 40_100236, Short Name: 545, Description: Redmond - Seattle
-Route ID: 40_100479, Short Name: 1 Line, Description: 1 Line runs between Lynnwood City Center Station and Angle Lake Station seven days a week
-Route ID: 40_2LINE, Short Name: 2 Line, Description: 2 Line runs between South Bellevue Station and Downtown Redmond Station seven days a week
-Route ID: 40_100240, Short Name: 554, Description: Issaquah - Seattle
-Route ID: 40_100239, Short Name: 550, Description: Bellevue - Seattle
-Route ID: 40_100451, Short Name: 556, Description: Issaquah-University District
-Route ID: 40_TLINE, Short Name: T Line, Description: T Line runs between Tacoma Dome Station and St Joseph Station seven days a week
-Route ID: 40_510, Short Name: 510, Description: 
-Route ID: 40_512, Short Name: 512, Description: 
-Route ID: 40_513, Short Name: 513, Description: 
-Route ID: 40_515, Short Name: 515, Description:
+stops: [
+    { id: "40_E09-T2", name: "South Bellevue", lat: 47.586932, lon: -122.190604 },
+    { id: "40_E11-T2", name: "East Main", lat: 47.608403, lon: -122.191099 },
+    { id: "40_E15-T2", name: "Bellevue Downtown", lat: 47.615183, lon: -122.191303 },
+    { id: "40_E19-T2", name: "Wilburton", lat: 47.618229, lon: -122.183687 },
+    { id: "40_E21-T2", name: "Spring District", lat: 47.623776, lon: -122.178239 },
+    { id: "40_E23-T2", name: "BelRed", lat: 47.6244, lon: -122.165224 },
+    { id: "40_E25-T2", name: "Overlake Village", lat: 47.636622, lon: -122.138361 },
+    { id: "40_E27-T2", name: "Redmond Technology", lat: 47.645199, lon: -122.133673 },
+    { id: "40_E29-T2", name: "Marymoor Village", lat: 47.667381, lon: -122.109118 },
+    { id: "40_E31-T2", name: "Downtown Redmond", lat: 47.671788, lon: -122.118952 },
+    // Stops in the other direction
+    { id: "40_E31-T1", name: "Downtown Redmond", lat: 47.671467, lon: -122.117864 },
+    { id: "40_E29-T1", name: "Marymoor Village", lat: 47.667166, lon: -122.110398 },
+    { id: "40_E27-T1", name: "Redmond Technology", lat: 47.644424, lon: -122.133556 },
+    { id: "40_E25-T1", name: "Overlake Village", lat: 47.636151, lon: -122.139236 },
+    { id: "40_E23-T1", name: "BelRed", lat: 47.624499, lon: -122.166364 },
+    { id: "40_E21-T1", name: "Spring District", lat: 47.623772, lon: -122.178901 },
+    { id: "40_E19-T1", name: "Wilburton", lat: 47.617909, lon: -122.183806 },
+    { id: "40_E15-T1", name: "Bellevue Downtown", lat: 47.615285, lon: -122.192531 },
+    { id: "40_E11-T1", name: "East Main", lat: 47.607707, lon: -122.191202 },
+    { id: "40_E09-T2", name: "South Bellevue", lat: 47.586932, lon: -122.190604 }
+  ]
