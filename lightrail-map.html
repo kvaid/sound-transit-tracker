@@ -1,40 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sound Transit Line 2 Real-Time Map</title>
-    <style>
-        #map {
-            height: 800px;
-            width: 100%;
-        }
-        #status {
-            padding: 10px;
-            margin-bottom: 10px;
-            background-color: #f8f8f8;
-            border-radius: 5px;
-        }
-        #debug {
-            padding: 10px;
-            background-color: #f0f0f0;
-            border: 1px solid #ccc;
-            margin-top: 10px;
-            font-family: monospace;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        .warning {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-    </style>
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
     <h1>Sound Transit Line 2 Real-Time Map</h1>
@@ -42,194 +12,20 @@
     <div id="map"></div>
     <div id="debug"></div>
     
-    <!-- Load config first -->
-    <script src="config.js"></script>
+    <!-- Load configuration first -->
+    <script src="js/config.js"></script>
     
-    <script>
-        // Track markers for cleanup
-        let vehicleMarkers = [];
-        let apiKey = config.ONE_BUS_AWAY_API_KEY; // OneBusAway API key
-        const tripDirectionCache = {};
-        
-        // Debug logging function
-        function log(message) {
-            const debug = document.getElementById('debug');
-            const timestamp = new Date().toLocaleTimeString();
-            debug.innerHTML += `<div>[${timestamp}] ${message}</div>`;
-            debug.scrollTop = debug.scrollHeight;
-            console.log(message);
-        }
-
-        // Update status message
-        function updateStatus(message, type = 'info') {
-            const status = document.getElementById('status');
-            status.textContent = message;
-            status.className = type;
-        }
-
-        // Get URL parameter helper
-        function getUrlParameter(name) {
-            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
-            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
-            var results = regex.exec(location.search);
-            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
-        }
-
-        // Initialize function
-        function initialize() {
-            // API key is already hardcoded
-            return true;
-        }
-
-
-        // Function to parse GTFS-Realtime protobuf data
-        async function fetchGTFSRealtimeData() {
-            if (!apiKey) return [];
-            
-            // Use the OneBusAway GTFS-realtime API for Sound Transit (agency ID 40)
-            const apiUrl = `https://api.pugetsound.onebusaway.org/api/gtfs_realtime/vehicle-positions-for-agency/40.pbtext?key=${apiKey}`;
-            
-            try {
-                updateStatus("Fetching real-time vehicle positions...");
-                log("Requesting data from: " + apiUrl);
-                
-                const response = await fetch(apiUrl);
-                if (!response.ok) {
-                    throw new Error(`API returned status ${response.status}`);
-                }
-                
-                // Parse the response text - it's in protocol buffer text format
-                const pbText = await response.text();
-                const vehicles = [];
-                const entityRegex = /entity\s*{\s*id:\s*"[^"]*"\s*vehicle\s*{\s*trip\s*{\s*trip_id:\s*"([^"]*)"\s*route_id:\s*"([^"]*)"\s*}\s*position\s*{\s*latitude:\s*([\d.-]+)\s*longitude:\s*([\d.-]+)\s*}\s*timestamp:\s*\d+\s*vehicle\s*{\s*id:\s*"([^"]*)"\s*}\s*}\s*}/g;
-
-                let match;
-                while ((match = entityRegex.exec(pbText)) !== null) {
-                    const [_, tripId, routeId, latitude, longitude, vehicleId] = match;
-                    
-                    // Only keep Line 2 vehicles or vehicles with routeId "40_100479"
-                    if (!routeId.includes("2LINE") && routeId !== "100479") continue;
-                    
-                    const vehicle = {
-                        route_id: routeId,
-                        trip_id: tripId || "unknown",
-                        vehicle_id: vehicleId || "unknown",
-                        latitude: parseFloat(latitude),
-                        longitude: parseFloat(longitude)
-                    };
-
-                    log(`Vehicle ID: ${vehicle.vehicle_id}, Route ID: ${vehicle.route_id}, Latitude: ${vehicle.latitude}, Longitude: ${vehicle.longitude}`);
-                    vehicles.push(vehicle);
-                }
-                
-                log(`Found ${vehicles.length} vehicles`);
-                
-                if (vehicles.length === 0) {
-                    updateStatus("No Line 2 trains currently active or detected", "warning");
-                } else {
-                    updateStatus(`Found ${vehicles.length} Line 2 trains`, "success");
-                }
-                
-                return vehicles;
-                
-            } catch (error) {
-                log(`Error fetching real-time data: ${error.message}`);
-                updateStatus(`Error: ${error.message}`, "error");
-                return [];
-            }
-        }
-
-        function initMap() {
-            if (!initialize()) return;
-            
-            // Create a map centered on Bellevue/Redmond area
-            const map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 13,
-                center: { lat: 47.6299, lng: -122.1536 }, // Updated center to new coordinates
-                mapTypeId: google.maps.MapTypeId.ROADMAP,
-            });
-
-            // Turn on the transit layer
-            const transitLayer = new google.maps.TransitLayer();
-            transitLayer.setMap(map);
-
-            // Fetch and display real-time train locations
-            const realTimeTrainIcon = {
-                url: "train_icon_red.png", // Use local train icon
-                scaledSize: new google.maps.Size(32, 32), // Adjust size if needed
-            };
-
-            async function updateRealTimeLocations() {
-                // Clear old vehicle markers first
-                vehicleMarkers.forEach(marker => marker.setMap(null));
-                vehicleMarkers = [];
-                
-                // Fetch new vehicle locations
-                const vehicles = await fetchGTFSRealtimeData();
-                
-                if (vehicles.length === 0) {
-                    log("No vehicles returned after filtering");
-                    // Offer to check route data if no vehicles are found
-                    if (confirm("No Line 2 trains found. Would you like to check available Sound Transit routes?")) {
-                        await fetchSoundTransitRoutes();
-                    }
-                    return;
-                }
-                
-                vehicles.forEach(vehicle => {
-                    // Check if a marker for this vehicle already exists
-                    let existingMarker = vehicleMarkers.find(marker => marker.vehicleId === vehicle.vehicle_id);
-                    
-                    if (existingMarker) {
-                        // Update the position of the existing marker
-                        existingMarker.setPosition({ lat: vehicle.latitude, lng: vehicle.longitude });
-                    } else {
-                        // Create a new marker if it doesn't exist
-                        const marker = new google.maps.Marker({
-                            position: { lat: vehicle.latitude, lng: vehicle.longitude },
-                            map: map,
-                            icon: realTimeTrainIcon,
-                            title: `Train ${vehicle.vehicle_id}`
-                        });
-                        
-                        // Track this marker for future updates
-                        marker.vehicleId = vehicle.vehicle_id;
-                        vehicleMarkers.push(marker);
-                        
-                        // Create info window with train details
-                        const infoContent = `
-                            <div style="padding: 10px;">
-                                <strong>Line 2 Train</strong><br>
-                                ID: ${vehicle.vehicle_id}<br>
-                                Trip: ${vehicle.trip_id}<br>
-                                Route: ${vehicle.route_id}<br>
-                                Direction: ${vehicle.direction}
-                            </div>
-                        `;
-                        
-                        const infoWindow = new google.maps.InfoWindow({
-                            content: infoContent
-                        });
-                        
-                        marker.addListener("click", () => {
-                            infoWindow.open(map, marker);
-                        });
-                    }
-                });
-                
-                log(`Updated map with ${vehicles.length} trains`);
-            }
-
-            // Initial update
-            updateRealTimeLocations();
-            
-            // Update every 30 seconds
-            setInterval(updateRealTimeLocations, 30000);
-            
-            // Log successful map initialization
-            log("Map initialized successfully");
-        }
-    </script>
+    <!-- Load utility functions -->
+    <script src="js/utils.js"></script>
+    
+    <!-- Load API functions -->
+    <script src="js/api.js"></script>
+    
+    <!-- Load map functions -->
+    <script src="js/map.js"></script>
+    
+    <!-- Load main application -->
+    <script src="js/app.js"></script>
     
     <!-- Load Google Maps script dynamically -->
     <script>
@@ -240,8 +36,6 @@
             script.defer = true;
             document.body.appendChild(script);
         }
-        
-        // Load Google Maps after config is loaded
         loadGoogleMapsScript();
     </script>
 </body>

@@ -1,4 +1,15 @@
 node_modules/
 .env
 .DS_Store
-config.js
+
+# Configuration files with sensitive data
+js/config.js
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+Thumbs.db

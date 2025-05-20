@@ -1,0 +1,29 @@
+/* Map container */
+#map {
+    height: 800px;
+    width: 100%;
+}
+
+/* Status message styling */
+#status {
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #f8f8f8;
+    border-radius: 5px;
+}
+
+/* Debug console styling */
+#debug {
+    padding: 10px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    margin-top: 10px;
+    font-family: monospace;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* Status message types */
+.success { background-color: #d4edda; color: #155724; }
+.error { background-color: #f8d7da; color: #721c24; }
+.warning { background-color: #fff3cd; color: #856404; } 
