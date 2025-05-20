@@ -42,10 +42,13 @@
     <div id="map"></div>
     <div id="debug"></div>
     
+    <!-- Load config first -->
+    <script src="config.js"></script>
+    
     <script>
         // Track markers for cleanup
         let vehicleMarkers = [];
-        let apiKey = ONE_BUS_AWAY_API_KEY; // OneBusAway API key
+        let apiKey = config.ONE_BUS_AWAY_API_KEY; // OneBusAway API key
         const tripDirectionCache = {};
         
         // Debug logging function
@@ -78,41 +81,6 @@
             return true;
         }
 
-        // Function to fetch trip directions for a route
-        // async function fetchTripDirection(tripId, routeId) {
-        //     // Add agency ID prefix if not present
-        //     const fullRouteId = routeId.startsWith('40_') ? routeId : `40_${routeId}`;
-            
-        //     if (!tripDirectionCache[fullRouteId]) {
-        //         const url = `https://api.pugetsound.onebusaway.org/api/where/trips-for-route/${fullRouteId}.json?key=${apiKey}`;
-        //         try {
-        //             log(`Fetching trip directions for route ${fullRouteId}`);
-        //             const response = await fetch(url);
-        //             if (!response.ok) throw new Error(`API returned status ${response.status}`);
-        //             const data = await response.json();
-                    
-        //             if (!data.data || !data.data.list) {
-        //                 log(`Invalid response format for route ${fullRouteId}: ${JSON.stringify(data)}`);
-        //                 return null;
-        //             }
-                    
-        //             // Cache all trips for this route
-        //             tripDirectionCache[fullRouteId] = {};
-        //             data.data.list.forEach(trip => {
-        //                 tripDirectionCache[fullRouteId][trip.id] = trip.directionId;
-        //                 log(`Cached direction for trip ${trip.id}: ${trip.directionId}`);
-        //             });
-        //         } catch (error) {
-        //             log(`Error fetching trip directions for ${fullRouteId}: ${error.message}`);
-        //             log(`API URL: ${url}`);
-        //             return null;
-        //         }
-        //     }
-            
-        //     const direction = tripDirectionCache[fullRouteId]?.[tripId];
-        //     log(`Retrieved direction for route ${fullRouteId}, trip ${tripId}: ${direction}`);
-        //     return direction;
-        // }
 
         // Function to parse GTFS-Realtime protobuf data
         async function fetchGTFSRealtimeData() {
@@ -263,6 +231,18 @@
         }
     </script>
     
-    <script src="https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&callback=initMap" async defer></script>
+    <!-- Load Google Maps script dynamically -->
+    <script>
+        function loadGoogleMapsScript() {
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${config.GOOGLE_MAPS_API_KEY}&callback=initMap`;
+            script.async = true;
+            script.defer = true;
+            document.body.appendChild(script);
+        }
+        
+        // Load Google Maps after config is loaded
+        loadGoogleMapsScript();
+    </script>
 </body>
 </html>
