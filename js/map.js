@@ -10,6 +10,13 @@ function initMap() {
     const transitLayer = new google.maps.TransitLayer();
     transitLayer.setMap(map);
 
+    // Add click listener to close info window when clicking anywhere on the map
+    map.addListener("click", () => {
+        if (window.infoWindow) {
+            window.infoWindow.close();
+        }
+    });
+
     log('Starting real-time updates...');
     updateRealTimeLocations(map);
     setInterval(() => updateRealTimeLocations(map), config.UPDATE_INTERVAL);
