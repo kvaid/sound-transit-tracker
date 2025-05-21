@@ -289,35 +289,47 @@ function showVehicleInfo(vehicle, marker) {
     // Format the schedule times if available
     let scheduleHtml = '';
     if (vehicle.schedule && Array.isArray(vehicle.schedule) && vehicle.schedule.length > 0) {
-        scheduleHtml = `
-            <div class="schedule-section">
-                <div class="schedule-container">
-                    <table class="schedule-table">
-                        <thead>
-                            <tr>
-                                <th>Stop</th>
-                                <th>Arrival</th>
-                                <th>Departure</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${vehicle.schedule.map(stop => {
-                                const arrivalTime = formatTime(stop.arrivalTime);
-                                const departureTime = formatTime(stop.departureTime);
-                                const stopName = getStopName(stop.stopId);
-                                return `
-                                    <tr>
-                                        <td>${stopName}</td>
-                                        <td>${arrivalTime}</td>
-                                        <td>${departureTime}</td>
-                                    </tr>
-                                `;
-                            }).join('')}
-                        </tbody>
-                    </table>
+        // Get current time in seconds since midnight
+        const now = new Date();
+        const currentSeconds = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+        
+        // Filter schedule to only show future stops
+        const futureStops = vehicle.schedule.filter(stop => {
+            const stopTime = stop.arrivalTime || stop.departureTime;
+            return stopTime > currentSeconds;
+        });
+
+        if (futureStops.length > 0) {
+            scheduleHtml = `
+                <div class="schedule-section">
+                    <div class="schedule-container">
+                        <table class="schedule-table">
+                            <thead>
+                                <tr>
+                                    <th>Stop</th>
+                                    <th>Arrival</th>
+                                    <th>Departure</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${futureStops.map(stop => {
+                                    const arrivalTime = formatTime(stop.arrivalTime);
+                                    const departureTime = formatTime(stop.departureTime);
+                                    const stopName = getStopName(stop.stopId);
+                                    return `
+                                        <tr>
+                                            <td>${stopName}</td>
+                                            <td>${arrivalTime}</td>
+                                            <td>${departureTime}</td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
     }
 
     // Get formatted metadata using helper functions
@@ -330,6 +342,14 @@ function showVehicleInfo(vehicle, marker) {
     // Format route display
     const routeDisplay = vehicle.route_id.includes('100479') ? 'Line 1' : vehicle.route_id;
 
+    // Convert schedule deviation to minutes
+    const deviationMinutes = Math.abs(Math.round(vehicle.scheduleDeviation / 60));
+    const scheduleStatus = vehicle.scheduleDeviation > 0 
+        ? `[${deviationMinutes} min late]` 
+        : vehicle.scheduleDeviation < 0 
+            ? `[${deviationMinutes} min early]`
+            : '[On time]';
+
     const infoContent = `
         <div class="vehicle-info">
             <h3>Line ${vehicle.route_id.includes('100479') ? '1' : '2'} Train Information</h3>
@@ -337,11 +357,7 @@ function showVehicleInfo(vehicle, marker) {
                 <table class="info-table">
                     <tr>
                         <td><strong>Vehicle ID:</strong></td>
-                        <td>${vehicle.vehicle_id} ${vehicle.scheduleDeviation > 0 
-                            ? `[${vehicle.scheduleDeviation} seconds late]` 
-                            : vehicle.scheduleDeviation < 0 
-                                ? `[${Math.abs(vehicle.scheduleDeviation)} seconds early]`
-                                : '[On time]'}</td>
+                        <td>${vehicle.vehicle_id} ${scheduleStatus}</td>
                     </tr>
                     <tr>
                         <td><strong>Route:</strong></td>
