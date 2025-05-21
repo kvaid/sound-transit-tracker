@@ -1,0 +1,11 @@
+fare_product_id,fare_product_name,amount,currency,rider_category_id,fare_media_id
+link_adult,Link Light Rail Adult,3.0,USD,adult,transit_go_ticket
+tline_adult,T Line Adult,2.0,USD,adult,ticket
+tline_adult,T Line Adult,2.0,USD,adult,transit_go_ticket
+youth,Youth 18 and Under,0.0,USD,youth,youth_attestation
+link_adult,Link Light Rail Adult,3.0,USD,adult,orca
+orca_reduced,ORCA Lift,1.0,USD,lift,orca_lift
+orca_reduced,Regional Reduced Fare Permit (Senior/Disabled),1.0,USD,rrfp,orca_rrfp
+youth,Youth 18 and Under,0.0,USD,youth,orca_youth
+link_adult,Link Light Rail Adult,3.0,USD,adult,ticket
+tline_adult,T Line Adult,2.0,USD,adult,orca

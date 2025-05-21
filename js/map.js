@@ -291,7 +291,6 @@ function showVehicleInfo(vehicle, marker) {
     if (vehicle.schedule && Array.isArray(vehicle.schedule) && vehicle.schedule.length > 0) {
         scheduleHtml = `
             <div class="schedule-section">
-                <h4>Schedule</h4>
                 <div class="schedule-container">
                     <table class="schedule-table">
                         <thead>
@@ -328,63 +327,35 @@ function showVehicleInfo(vehicle, marker) {
     const completionPercentage = getCompletionPercentage(vehicle.distanceAlongTrip, vehicle.totalDistanceAlongTrip);
     const heading = degreesToCardinal(vehicle.orientation);
 
+    // Format route display
+    const routeDisplay = vehicle.route_id.includes('100479') ? 'Line 1' : vehicle.route_id;
+
     const infoContent = `
         <div class="vehicle-info">
             <h3>Line ${vehicle.route_id.includes('100479') ? '1' : '2'} Train Information</h3>
             <div class="info-section">
-                <h4>Basic Information</h4>
                 <table class="info-table">
                     <tr>
                         <td><strong>Vehicle ID:</strong></td>
-                        <td>${vehicle.vehicle_id}</td>
+                        <td>${vehicle.vehicle_id} ${vehicle.scheduleDeviation > 0 
+                            ? `[${vehicle.scheduleDeviation} seconds late]` 
+                            : vehicle.scheduleDeviation < 0 
+                                ? `[${Math.abs(vehicle.scheduleDeviation)} seconds early]`
+                                : '[On time]'}</td>
                     </tr>
                     <tr>
                         <td><strong>Route:</strong></td>
-                        <td>${vehicle.route_id}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Direction:</strong></td>
-                        <td>${directionText}</td>
+                        <td>${routeDisplay} ${directionText} [${Math.round(vehicle.orientation)}° ${heading}]</td>
                     </tr>
                     ${vehicle.tripHeadsign ? `
                     <tr>
                         <td><strong>Destination:</strong></td>
-                        <td>${vehicle.tripHeadsign}</td>
+                        <td>${vehicle.tripHeadsign} [${completionPercentage}% completed]</td>
                     </tr>
                     ` : ''}
-                    ${vehicle.serviceDate ? `
-                    <tr>
-                        <td><strong>Service Date:</strong></td>
-                        <td>${new Date(vehicle.serviceDate).toLocaleDateString()}</td>
-                    </tr>
-                    ` : ''}
-                </table>
-            </div>
-
-            <div class="info-section">
-                <h4>Current Status</h4>
-                <table class="info-table">
                     <tr>
                         <td><strong>Next Stop:</strong></td>
                         <td>${nextStopName} (${nextStopTime})</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Progress:</strong></td>
-                        <td>${completionPercentage}% of route completed</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Heading:</strong></td>
-                        <td>${heading} (${Math.round(vehicle.orientation)}°)</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Schedule Status:</strong></td>
-                        <td class="${vehicle.scheduleDeviation > 0 ? 'text-yellow-600' : vehicle.scheduleDeviation < 0 ? 'text-green-600' : 'text-gray-600'}">
-                            ${vehicle.scheduleDeviation > 0 
-                                ? `${vehicle.scheduleDeviation} seconds late` 
-                                : vehicle.scheduleDeviation < 0 
-                                    ? `${Math.abs(vehicle.scheduleDeviation)} seconds early`
-                                    : 'On time'}
-                        </td>
                     </tr>
                 </table>
             </div>

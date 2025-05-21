@@ -194,31 +194,17 @@ function parseVehicleData(pbText) {
             continue;
         }
         
-        // Extract direction ID from trip ID number
-        // For Line 2: 3xxx = Westbound/Southbound (1), 4xxx = Eastbound/Northbound (0)
-        // For Line 1: 1xxx = Southbound (1), 2xxx = Northbound (0)
-        let directionId = "0";
-        const tripNumber = tripId.match(/\d{4}$/);
-        if (tripNumber) {
-            const num = parseInt(tripNumber[0]);
-            if (routeId.includes("2LINE")) {
-                directionId = num >= 3000 && num < 4000 ? "1" : "0";
-            } else if (routeId.includes("100479")) {
-                directionId = num >= 1000 && num < 2000 ? "1" : "0";
-            }
-        }
-        
         const vehicle = {
             route_id: routeId,
             trip_id: tripId || "unknown",
             vehicle_id: vehicleId || "unknown",
             latitude: parseFloat(latitude),
             longitude: parseFloat(longitude),
-            directionId: directionId
+            directionId: "0"  // Default to 0, will be updated with actual value from API data
         };
 
-        const directionText = getDirectionText(directionId, routeId);
-        log(`Vehicle ${vehicle.vehicle_id} (${vehicle.route_id}): Direction ID = ${directionId} (${directionText}) (Trip: ${tripId})`);
+        const directionText = getDirectionText(vehicle.directionId, routeId);
+        log(`Vehicle ${vehicle.vehicle_id} (${vehicle.route_id}): Direction ID = ${vehicle.directionId} (${directionText}) (Trip: ${tripId})`);
 
         vehicles.push(vehicle);
     }

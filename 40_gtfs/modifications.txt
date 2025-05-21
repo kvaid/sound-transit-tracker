@@ -1,0 +1,15 @@
+Below is a list of the changes included in the SC-Spring-2025.9 release of Sound Transit GTFS data.
+
+Schedule Changes
+* 1 Line: remove Pinehurst single tracking disruption on May 12-23
+* 1 Line: add Angle Lake late night closure disruption May 19 - June 12
+* 1 Line: add extra service on June 15 and 23 for Club World Cup
+
+Route Changes
+* Update 2 Line description after Downtown Redmond expansion opening
+
+Stop Changes
+* Updates to TTS stop names (text to speech)
+
+Other Changes
+* none

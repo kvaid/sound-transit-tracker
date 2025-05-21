@@ -1,0 +1,7 @@
+leg_group_id,network_id,fare_product_id
+tline_one_way_full,tline_network,tline_adult
+sounder_reduced,sounder_network,orca_reduced
+tline_one_way_reduced,tline_network,orca_reduced
+youth_all_legs,,youth
+link_one_way_reduced,link_network,orca_reduced
+link_one_way_full,link_network,link_adult

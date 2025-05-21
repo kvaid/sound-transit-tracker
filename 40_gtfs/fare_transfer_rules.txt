@@ -1,0 +1,15 @@
+from_leg_group_id,to_leg_group_id,transfer_count,duration_limit,duration_limit_type,fare_transfer_type,fare_product_id
+tline_one_way_reduced,tline_one_way_reduced,-1,7200,1,2,orca_reduced
+link_one_way_full,link_one_way_full,-1,7200,1,2,link_adult
+youth_all_legs,youth_all_legs,-1,7200,1,2,youth
+tline_one_way_full,tline_one_way_full,-1,7200,1,2,tline_adult
+link_one_way_full,tline_one_way_full,,7200,1,2,link_adult
+link_one_way_reduced,tline_one_way_reduced,,7200,1,2,orca_reduced
+link_one_way_reduced,link_one_way_reduced,-1,7200,1,2,orca_reduced
+sounder_reduced,link_one_way_reduced,,7200,1,2,orca_reduced
+sounder_reduced,sounder_reduced,-1,7200,1,2,orca_reduced
+tline_one_way_reduced,sounder_reduced,,7200,1,2,orca_reduced
+tline_one_way_reduced,link_one_way_reduced,,7200,1,2,orca_reduced
+tline_one_way_full,link_one_way_full,,7200,1,2,link_adult
+link_one_way_reduced,sounder_reduced,,7200,1,2,orca_reduced
+sounder_reduced,tline_one_way_reduced,,7200,1,2,orca_reduced
