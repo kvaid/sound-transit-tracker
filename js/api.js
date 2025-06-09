@@ -1,7 +1,7 @@
 // API Functions
 async function fetchGTFSRealtimeData() {
     if (!config.ONE_BUS_AWAY_API_KEY) {
-        log('No API key available');
+        // log('No API key available');
         return [];
     }
     
@@ -9,16 +9,16 @@ async function fetchGTFSRealtimeData() {
     
     try {
         updateStatus("Fetching real-time vehicle positions...");
-        log(`Requesting data from: ${apiUrl}`);
+        // log(`Requesting data from: ${apiUrl}`);
         
         const response = await fetch(apiUrl);
         if (!response.ok) throw new Error(`API returned status ${response.status}`);
         
         const pbText = await response.text();
-        log(`Received response: ${pbText.substring(0, 200)}...`); // Log first 200 chars of response
+        // log(`Received response: ${pbText.substring(0, 200)}...`); // Log first 200 chars of response
         
         const vehicles = parseVehicleData(pbText);
-        log(`Parsed ${vehicles.length} vehicles from response`);
+        // log(`Parsed ${vehicles.length} vehicles from response`);
         
         // Fetch additional trip data for each vehicle
         await enrichVehicleData(vehicles);
@@ -26,7 +26,7 @@ async function fetchGTFSRealtimeData() {
         return vehicles;
         
     } catch (error) {
-        log(`Error fetching real-time data: ${error.message}`);
+        // log(`Error fetching real-time data: ${error.message}`);
         updateStatus(`Error: ${error.message}`, "error");
         return [];
     }
@@ -48,10 +48,9 @@ async function enrichVehicleData(vehicles) {
             updateStatus(`Fetching trip schedule data for route ${route}...`);
             
             const response = await fetch(apiUrl);
-
             if (!response.ok) {
-                log(`Trip API returned status ${response.status} for route ${route}`);
-                log(`Error response: ${await response.text()}`);
+                // log(`Trip API returned status ${response.status} for route ${route}`);
+                // log(`Error response: ${await response.text()}`);
                 continue;
             }
             
@@ -63,19 +62,19 @@ async function enrichVehicleData(vehicles) {
             // log(`  List length: ${data.data?.list?.length || 0}`);
             
             if (!data.data || !data.data.list) {
-                log(`No trip data available in response for route ${route}`);
+                // log(`No trip data available in response for route ${route}`);
                 continue;
             }
             
             // Add trips to the map
             data.data.list.forEach(trip => {
                 if (!trip.schedule) {
-                    log(`  WARNING: No schedule data for trip ${trip.tripId}`);
+                    // log(`  WARNING: No schedule data for trip ${trip.tripId}`);
                     return;
                 }
                 
                 if (!trip.schedule.stopTimes) {
-                    log(`  WARNING: No stop times for trip ${trip.tripId}`);
+                    // log(`  WARNING: No stop times for trip ${trip.tripId}`);
                     return;
                 }
 
@@ -116,17 +115,16 @@ async function enrichVehicleData(vehicles) {
                 // log(`Trip: ${trip.tripId}, Direction: ${trip.directionId}, Route: ${trip.routeId}, Destination: ${destination}`);
             });
             
-            log(`Added ${data.data.list.length} trips for route ${route}`);
+            // log(`Added ${data.data.list.length} trips for route ${route}`);
             
         } catch (error) {
-            log(`Error fetching trip data for route ${route}: ${error.message}`);
-            log(`Error stack: ${error.stack}`);
+            // log(`Error fetching trip data for route ${route}: ${error.message}`);
+            // log(`Error stack: ${error.stack}`);
             updateStatus(`Error fetching trip data for route ${route}: ${error.message}`, "error");
         }
     }
     
-    // Log trip map contents
-    log(`Trip map contains ${tripMap.size} total trips`);
+    // log(`Trip map contains ${tripMap.size} total trips`);
     
     // Enrich vehicle data with trip information
     vehicles.forEach(vehicle => {
@@ -206,7 +204,7 @@ function parseVehicleData(pbText) {
         };
 
         const directionText = getDirectionText(vehicle.directionId, routeId);
-        log(`Vehicle ${vehicle.vehicle_id} (${vehicle.route_id}): Direction ID = ${vehicle.directionId} (${directionText}) (Trip: ${tripId})`);
+        // log(`Vehicle ${vehicle.vehicle_id} (${vehicle.route_id}): Direction ID = ${vehicle.directionId} (${directionText}) (Trip: ${tripId})`);
 
         vehicles.push(vehicle);
     }

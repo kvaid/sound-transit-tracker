@@ -2,7 +2,11 @@
 const vehicleMarkers = [];
 const tripDirectionCache = {};
 
-// Initialize application
-document.addEventListener('DOMContentLoaded', () => {
-    log('Application initialized');
-}); 
+// Initialize the application
+function initApp() {
+    // log('Application initialized');
+    // Additional initialization code can go here
+}
+
+// Call initApp when the page loads
+window.addEventListener('load', initApp); 
