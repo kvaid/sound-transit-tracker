@@ -45,7 +45,7 @@ async function enrichVehicleData(vehicles) {
         try {
             const apiUrl = `https://api.pugetsound.onebusaway.org/api/where/trips-for-route/${route}.json?key=${config.ONE_BUS_AWAY_API_KEY}`;
             // log(`Fetching trip data from: ${apiUrl}`);
-            updateStatus(`Fetching trip schedule data for route ${route}...`);
+            //updateStatus(`Fetching trip schedule data for route ${route}...`);
             
             const response = await fetch(apiUrl);
             if (!response.ok) {
