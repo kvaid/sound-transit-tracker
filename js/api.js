@@ -44,10 +44,11 @@ async function enrichVehicleData(vehicles) {
     for (const route of routes) {
         try {
             const apiUrl = `https://api.pugetsound.onebusaway.org/api/where/trips-for-route/${route}.json?key=${config.ONE_BUS_AWAY_API_KEY}`;
-            log(`Fetching trip data from: ${apiUrl}`);
+            // log(`Fetching trip data from: ${apiUrl}`);
             updateStatus(`Fetching trip schedule data for route ${route}...`);
             
             const response = await fetch(apiUrl);
+
             if (!response.ok) {
                 log(`Trip API returned status ${response.status} for route ${route}`);
                 log(`Error response: ${await response.text()}`);
@@ -55,11 +56,11 @@ async function enrichVehicleData(vehicles) {
             }
             
             const data = await response.json();
-            log(`Received response for route ${route}:`);
-            log(`  Status: ${data.status}`);
-            log(`  Version: ${data.version}`);
-            log(`  Data available: ${!!data.data}`);
-            log(`  List length: ${data.data?.list?.length || 0}`);
+            // log(`Received response for route ${route}:`);
+            // log(`  Status: ${data.status}`);
+            // log(`  Version: ${data.version}`);
+            // log(`  Data available: ${!!data.data}`);
+            // log(`  List length: ${data.data?.list?.length || 0}`);
             
             if (!data.data || !data.data.list) {
                 log(`No trip data available in response for route ${route}`);
@@ -112,6 +113,7 @@ async function enrichVehicleData(vehicles) {
                     vehicleId: status.vehicleId || 'unknown',
                     destination: destination
                 });
+                // log(`Trip: ${trip.tripId}, Direction: ${trip.directionId}, Route: ${trip.routeId}, Destination: ${destination}`);
             });
             
             log(`Added ${data.data.list.length} trips for route ${route}`);
@@ -179,7 +181,7 @@ async function enrichVehicleData(vehicles) {
         }
     });
     
-    log(`Enriched ${vehicles.length} vehicles with trip data`);
+    // log(`Enriched ${vehicles.length} vehicles with trip data`);
 }
 
 function parseVehicleData(pbText) {
