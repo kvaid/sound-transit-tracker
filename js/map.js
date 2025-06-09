@@ -1,6 +1,6 @@
 // Map Functions
 function initMap() {
-    // log('Initializing map...');
+    log('Initializing map...');
     const map = new google.maps.Map(document.getElementById("map"), {
         zoom: config.MAP_ZOOM,
         center: config.MAP_CENTER,
@@ -17,27 +17,27 @@ function initMap() {
         }
     });
 
-    // log('Starting real-time updates...');
+    log('Starting real-time updates...');
     updateRealTimeLocations(map);
     setInterval(() => updateRealTimeLocations(map), config.UPDATE_INTERVAL);
     
-    // log("Map initialized successfully");
+    log("Map initialized successfully");
 }
 
 async function updateRealTimeLocations(map) {
-    // log('Updating real-time locations...');
+    log('Updating real-time locations...');
     
     try {
         // Fetch new locations
         const vehicles = await fetchGTFSRealtimeData();
-        // log(`Received ${vehicles.length} vehicles from API`);
+        log(`Received ${vehicles.length} vehicles from API`);
         
         // Update markers with new vehicle data
         updateVehicleMarkers(vehicles, map);
         
-        // log(`Updated map with ${vehicleMarkers.size} markers`);
+        log(`Updated map with ${vehicleMarkers.size} markers`);
     } catch (error) {
-        // log('Error updating real-time locations:', error);
+        log('Error updating real-time locations:', error);
     }
 }
 
@@ -57,7 +57,7 @@ function createVehicleMarker(vehicle, map) {
     // Format the schedule times if available
     let scheduleHtml = '';
     if (vehicle.schedule && Array.isArray(vehicle.schedule) && vehicle.schedule.length > 0) {
-        // log(`Creating schedule HTML for ${vehicle.schedule.length} stops`);
+        log(`Creating schedule HTML for ${vehicle.schedule.length} stops`);
         scheduleHtml = `
             <div class="schedule-section">
                 <h4>Schedule</h4>
@@ -75,7 +75,7 @@ function createVehicleMarker(vehicle, map) {
                                 const arrivalTime = formatTime(stop.arrivalTime);
                                 const departureTime = formatTime(stop.departureTime);
                                 const stopName = getStopName(stop.stopId);
-                                // log(`Stop ${stopName}: Arrival ${arrivalTime}, Departure ${departureTime}`);
+                                log(`Stop ${stopName}: Arrival ${arrivalTime}, Departure ${departureTime}`);
                                 return `
                                     <tr>
                                         <td>${stopName}</td>
@@ -90,7 +90,7 @@ function createVehicleMarker(vehicle, map) {
             </div>
         `;
     } else {
-        // log(`No schedule data available for vehicle ${vehicle.vehicle_id}`);
+        log(`No schedule data available for vehicle ${vehicle.vehicle_id}`);
     }
 
     // Get formatted metadata using helper functions
@@ -286,7 +286,7 @@ function updateVehicleMarkers(vehicles, map) {
                 vehicleMarkers.set(vehicle.vehicle_id, marker);
             }
         } catch (error) {
-            // log(`Error processing vehicle ${vehicle.vehicle_id}:`, error);
+            log(`Error processing vehicle ${vehicle.vehicle_id}:`, error);
         }
     });
 }
