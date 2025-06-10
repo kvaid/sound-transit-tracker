@@ -15,7 +15,7 @@ async function fetchGTFSRealtimeData() {
         if (!response.ok) throw new Error(`API returned status ${response.status}`);
         
         const pbText = await response.text();
-        log(`Received response: ${pbText.substring(0, 200)}...`); // Log first 200 chars of response
+        // log(`Received response: ${pbText.substring(0, 200)}...`); // Log first 200 chars of response
         
         const vehicles = parseVehicleData(pbText);
         log(`Parsed ${vehicles.length} vehicles from response`);
@@ -126,7 +126,7 @@ async function enrichVehicleData(vehicles) {
     }
     
     // Log trip map contents
-    log(`Trip map contains ${tripMap.size} total trips`);
+    // log(`Trip map contains ${tripMap.size} total trips`);
     
     // Enrich vehicle data with trip information
     vehicles.forEach(vehicle => {
