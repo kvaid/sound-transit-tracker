@@ -18,7 +18,7 @@ async function fetchGTFSRealtimeData() {
         // log(`Received response: ${pbText.substring(0, 200)}...`); // Log first 200 chars of response
         
         const vehicles = parseVehicleData(pbText);
-        log(`Parsed ${vehicles.length} vehicles from response`);
+        // log(`Parsed ${vehicles.length} vehicles from response`);
         
         // Fetch additional trip data for each vehicle
         await enrichVehicleData(vehicles);
@@ -206,7 +206,7 @@ function parseVehicleData(pbText) {
         };
 
         const directionText = getDirectionText(vehicle.directionId, routeId);
-        log(`Vehicle ${vehicle.vehicle_id} (${vehicle.route_id}): Direction ID = ${vehicle.directionId} (${directionText}) (Trip: ${tripId})`);
+        // log(`Vehicle ${vehicle.vehicle_id} (${vehicle.route_id}): Direction ID = ${vehicle.directionId} (${directionText}) (Trip: ${tripId})`);
 
         vehicles.push(vehicle);
     }

@@ -30,12 +30,12 @@ async function updateRealTimeLocations(map) {
     try {
         // Fetch new locations
         const vehicles = await fetchGTFSRealtimeData();
-        log(`Received ${vehicles.length} vehicles from API`);
+        // log(`Received ${vehicles.length} vehicles from API`);
         
         // Update markers with new vehicle data
         updateVehicleMarkers(vehicles, map);
         
-        log(`Updated map with ${vehicleMarkers.size} markers`);
+        // log(`Updated map with ${vehicleMarkers.size} markers`);
     } catch (error) {
         log('Error updating real-time locations:', error);
     }
